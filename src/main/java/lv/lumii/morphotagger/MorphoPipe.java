@@ -55,11 +55,11 @@ public class MorphoPipe {
 	private static String field_separator = "\t";
 	private static String token_separator = eol;
 	
-	private static boolean mini_tag = false;		
-	private static boolean features = false;	
-	private static boolean LETAfeatures = true;	
+	private static boolean mini_tag = false;	
+	private static boolean features = false;
+	private static boolean LETAfeatures = true;
 	private static inputTypes inputType = inputTypes.PARAGRAPH;
-	private static outputTypes outputType = outputTypes.CONLL_X;
+	private static outputTypes outputType = outputTypes.JSON;
 	private static int sentencelengthcap = Splitting.DEFAULT_SENTENCE_LENGTH_CAP;
 	private static boolean saveColumns = false;
 	private static boolean keepTags = false;
