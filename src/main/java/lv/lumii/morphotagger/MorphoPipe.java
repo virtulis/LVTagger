@@ -21,10 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 
 import lv.semti.morphology.analyzer.Splitting;
@@ -49,7 +46,7 @@ import edu.stanford.nlp.sequences.LVMorphologyReaderAndWriter;
 
 public class MorphoPipe {
 	private enum inputTypes {SENTENCE, PARAGRAPH, VERT, CONLL, JSON};
-	private enum outputTypes {JSON, TAB, VERT, MOSES, CONLL_X, XML, VISL_CG, lemmatizedText};
+	private enum outputTypes {JSON, TAB, VERT, MOSES, CONLL_X, XML, VISL_CG, lemmatizedText, RUSCORPORA};
 
 	private static String eol = System.getProperty("line.separator");
 	private static String field_separator = "\t";
@@ -75,6 +72,9 @@ public class MorphoPipe {
 			if (args[i].equalsIgnoreCase("-tab")) {  // one response line per each query line, tab-separated
 				outputType = outputTypes.TAB;
 				token_separator = "\t";
+			}
+			if (args[i].equalsIgnoreCase("-rus")) {  // ruscorpora.ru format
+				outputType = outputTypes.RUSCORPORA;
 			}
 			if (args[i].equalsIgnoreCase("-vert")) { // one response line per token, tab-separated
 				outputType = outputTypes.VERT;
@@ -189,7 +189,7 @@ public class MorphoPipe {
 	 * Splits the text in sentences if needed, and forwards to outputSentance
 	 * @param cmm - the tagger, needed to retrieve tagger features if they are requested
 	 * @param out - a stream to output the data
-	 * @param sentence - actual tokens to be output
+	 * @param text
 	 */
 	public static void processSentences(
 			CMMClassifier<CoreLabel> cmm, PrintStream out, String text) {
@@ -237,6 +237,9 @@ public class MorphoPipe {
 			break;
 		case lemmatizedText:
 			out.println( output_lemmatized(sentence, cmm));
+			break;
+		case RUSCORPORA:
+			out.println(output_RUS(sentence));
 			break;
 		default: 
 			out.println( output_separated(sentence));	    
@@ -375,6 +378,85 @@ public class MorphoPipe {
 			}
 		}
 		return s.toString().trim();
+	}
+	
+	private static void add_RUS_tag(Wordform wf, List<String> list, String key, String match, String tag) {
+		String val = wf.getValue(key);
+		if (val != null && val.equals(match)) list.add(tag);
+	}
+
+	private static String output_RUS(List<CoreLabel> tokens) {
+		StringBuilder s = new StringBuilder();
+		
+		s.append("<se>");
+
+		for (CoreLabel word : tokens) {
+			
+			String token = word.getString(TextAnnotation.class);
+			if (token.contains("<s>")) continue;
+
+			Word analysis = word.get(LVMorphologyAnalysis.class);
+			Wordform wf = analysis.getMatchingWordform(word.getString(AnswerAnnotation.class), false);
+			
+			if (wf.getValue(AttributeNames.i_PartOfSpeech).equals(AttributeNames.v_Punctuation)) continue;
+			
+			s.append("<w>");
+			
+			s.append("<ana");
+
+			s.append(" lex=\"");
+			s.append(wf.getValue(AttributeNames.i_Lemma));
+			s.append("\"");
+			
+			List<String> left = new ArrayList<String>();
+			List<String> right = new ArrayList<String>();
+			
+			switch (wf.getValue(AttributeNames.i_PartOfSpeech)) {
+			
+				case AttributeNames.v_Noun:
+					
+					left.add("S");
+
+					add_RUS_tag(wf, left, AttributeNames.i_NounType, AttributeNames.v_CommonNoun, "common");
+					add_RUS_tag(wf, left, AttributeNames.i_NounType, AttributeNames.v_ProperNoun, "proper");
+
+					add_RUS_tag(wf, left, AttributeNames.i_Gender, AttributeNames.v_Masculine, "m");
+					add_RUS_tag(wf, left, AttributeNames.i_Gender, AttributeNames.v_Feminine, "f");
+					add_RUS_tag(wf, left, AttributeNames.i_Gender, AttributeNames.v_Kopdzimte, "m-f");
+
+					add_RUS_tag(wf, right, AttributeNames.i_Number, AttributeNames.v_Singular, "sg");
+					add_RUS_tag(wf, right, AttributeNames.i_Number, AttributeNames.v_Plural, "pl");
+
+					add_RUS_tag(wf, left, AttributeNames.i_NumberSpecial, AttributeNames.v_SingulareTantum, "sgtant");
+					add_RUS_tag(wf, left, AttributeNames.i_NumberSpecial, AttributeNames.v_PlurareTantum, "pltant");
+
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Nominative, "nom");
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Genitive, "gen");
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Dative, "dat");
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Accusative, "acc");
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Locative, "loc");
+					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Vocative, "voc");
+					
+					break;
+
+			}
+			
+			s.append(" gr=\"");
+			s.append(String.join(",", left));
+			s.append("=");
+			s.append(String.join(",", right));
+			s.append("\"");
+
+			s.append("></ana>");
+			
+			s.append(token);
+			s.append("</w>");
+			
+		}
+
+		s.append("</se>");
+		
+		return s.toString();
 	}
 	
 	private static void addLETAfeatures(Wordform wf) {
