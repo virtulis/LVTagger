@@ -430,12 +430,12 @@ public class MorphoPipe {
 					add_RUS_tag(wf, left, AttributeNames.i_NumberSpecial, AttributeNames.v_SingulareTantum, "sgtant");
 					add_RUS_tag(wf, left, AttributeNames.i_NumberSpecial, AttributeNames.v_PlurareTantum, "pltant");
 
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Nominative, "nom");
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Genitive, "gen");
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Dative, "dat");
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Accusative, "acc");
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Locative, "loc");
-					add_RUS_tag(wf, left, AttributeNames.i_Case, AttributeNames.v_Vocative, "voc");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Nominative, "nom");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Genitive, "gen");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Dative, "dat");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Accusative, "acc");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Locative, "loc");
+					add_RUS_tag(wf, right, AttributeNames.i_Case, AttributeNames.v_Vocative, "voc");
 					
 					break;
 
